@@ -1,11 +1,13 @@
 package com.example.studentsapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studentsapp.model.Model
 import com.example.studentsapp.model.Student
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 interface OnItemClickListener {
     fun onItemClick(position: Int)
@@ -22,7 +25,7 @@ interface OnItemClickListener {
 }
 
 class StudentsRecyclerViewActivity : AppCompatActivity() {
-
+    private lateinit var recyclerView: RecyclerView
     private var students: MutableList<Student>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,12 +38,13 @@ class StudentsRecyclerViewActivity : AppCompatActivity() {
             insets
         }
 
-        // TODO: 1. Create layout ✅
-        // TODO: 2. Create adapter ✅
-        // TODO: 3. Create ViewHolder ✅
+        setupRecyclerView()
+        setupAddButton()
+    }
 
+    private fun setupRecyclerView() {
         students = Model.shared.students
-        val recyclerView: RecyclerView = findViewById(R.id.students_recycler_view)
+        recyclerView = findViewById(R.id.students_recycler_view)
         recyclerView.setHasFixedSize(true)
 
         val layoutManager = LinearLayoutManager(this)
@@ -55,17 +59,34 @@ class StudentsRecyclerViewActivity : AppCompatActivity() {
 
             override fun onItemClick(student: Student?) {
                 Log.d("TAG", "On student clicked name: ${student?.name}")
+                student?.let {
+                    val intent = Intent(this@StudentsRecyclerViewActivity, StudentDetailsActivity::class.java)
+                    intent.putExtra("student_id", it.id)
+                    startActivity(intent)
+                }
             }
         }
 
         recyclerView.adapter = adapter
+    }
 
+    private fun setupAddButton() {
+        val addButton: FloatingActionButton = findViewById(R.id.add_student_fab)
+        addButton.setOnClickListener {
+            val intent = Intent(this, AddStudentActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        recyclerView.adapter?.notifyDataSetChanged()
     }
 
     class StudentViewHolder(
         itemView: View,
         listener: OnItemClickListener?
-    ): RecyclerView.ViewHolder(itemView) {
+    ) : RecyclerView.ViewHolder(itemView) {
 
         private var nameTextView: TextView? = null
         private var idTextView: TextView? = null
@@ -81,6 +102,7 @@ class StudentsRecyclerViewActivity : AppCompatActivity() {
                 setOnClickListener { view ->
                     (tag as? Int)?.let { tag ->
                         student?.isChecked = (view as? CheckBox)?.isChecked ?: false
+                        student?.let { Model.shared.updateStudentCheckStatus(it.id, it.isChecked) }
                     }
                 }
             }
@@ -102,8 +124,7 @@ class StudentsRecyclerViewActivity : AppCompatActivity() {
         }
     }
 
-    class StudentsRecyclerAdapter(private val students: List<Student>?): RecyclerView.Adapter<StudentViewHolder>() {
-
+    class StudentsRecyclerAdapter(private val students: List<Student>?) : RecyclerView.Adapter<StudentViewHolder>() {
         var listener: OnItemClickListener? = null
 
         override fun getItemCount(): Int = students?.size ?: 0

@@ -1,5 +1,6 @@
 package com.example.studentsapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -15,10 +17,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.studentsapp.model.Model
 import com.example.studentsapp.model.Student
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class StudentsListViewActivity : AppCompatActivity() {
-
-    var students: MutableList<Student>? = null
+    private var students: MutableList<Student>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,83 +32,73 @@ class StudentsListViewActivity : AppCompatActivity() {
             insets
         }
 
-        // TODO: 1. Set xml layout ✅
-        // TODO: 2. Set instance of list view in activity ✅
-        // TODO: 3. Set adapter ✅
-        // TODO: 4. Create rows layout ✅
-        // TODO: 5. Set dynamic data (MVP) 👨‍🎓
-        // TODO: 6. On click on checkbox
+        setupListView()
+        setupAddButton()
+    }
 
+    private fun setupListView() {
         students = Model.shared.students
         val listView: ListView = findViewById(R.id.students_list_view)
         listView.adapter = StudentsAdapter()
+
+        listView.setOnItemClickListener { _, _, position, _ ->
+            students?.get(position)?.let { student ->
+                val intent = Intent(this, StudentDetailsActivity::class.java)
+                intent.putExtra("student_id", student.id)
+                startActivity(intent)
+            }
+        }
     }
 
-    inner class StudentsAdapter(): BaseAdapter() {
+    private fun setupAddButton() {
+        val addButton: FloatingActionButton = findViewById(R.id.add_student_fab)
+        addButton.setOnClickListener {
+            startActivity(Intent(this, AddStudentActivity::class.java))
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupListView()
+    }
+
+    inner class StudentsAdapter : BaseAdapter() {
         override fun getCount(): Int = students?.size ?: 0
 
-        override fun getItem(position: Int): Any {
-            TODO("Not yet implemented")
-        }
+        override fun getItem(position: Int): Any = students?.get(position) ?: Any()
 
-        override fun getItemId(position: Int): Long {
-            TODO("Not yet implemented")
-        }
+        override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val inflation = LayoutInflater.from(parent?.context)
-            val view = convertView ?: inflation.inflate(
+            val view = convertView ?: LayoutInflater.from(parent?.context).inflate(
                 R.layout.student_list_row,
                 parent,
                 false
-            ).apply {
-                findViewById<CheckBox>(R.id.student_row_check_box).apply {
-                    setOnClickListener { view ->
-                        (tag as? Int)?.let { tag ->
-                            val student = students?.get(tag)
-                            student?.isChecked = (view as? CheckBox)?.isChecked ?: false
+            )
+
+            val student = students?.get(position)
+
+            view.apply {
+                findViewById<TextView>(R.id.student_row_name_text_view)?.text = student?.name
+                findViewById<TextView>(R.id.student_row_id_text_view)?.text = student?.id
+                findViewById<ImageView>(R.id.student_row_image_view)?.setImageResource(R.drawable.student)
+
+                findViewById<CheckBox>(R.id.student_row_check_box)?.apply {
+                    isChecked = student?.isChecked ?: false
+                    tag = position
+
+                    setOnClickListener { checkboxView ->
+                        (checkboxView.tag as? Int)?.let { tagPosition ->
+                            students?.get(tagPosition)?.let { taggedStudent ->
+                                taggedStudent.isChecked = (checkboxView as? CheckBox)?.isChecked ?: false
+                                Model.shared.updateStudentCheckStatus(taggedStudent.id, taggedStudent.isChecked)
+                            }
                         }
                     }
                 }
             }
 
-//            var view = convertView
-//            if (view == null) {
-//                view = inflation.inflate(R.layout.student_list_row, parent, false)
-//                Log.d("TAG", "Inflating position $position")
-//                val checkBox: CheckBox? = view?.findViewById(R.id.student_row_check_box)
-////                checkBox?.setOnClickListener {
-////                    student?.isChecked = checkBox.isChecked
-////                }
-//
-//                checkBox?.apply {
-//                    setOnClickListener { view ->
-//                        (tag as? Int)?.let { tag ->
-//                            val student = students?.get(tag)
-//                            student?.isChecked = (view as? CheckBox)?.isChecked ?: false
-//                        }
-//                    }
-//                }
-//            }
-
-            val student = students?.get(position)
-
-            val nameTextView: TextView? = view?.findViewById(R.id.student_row_name_text_view)
-            val idTextView: TextView? = view?.findViewById(R.id.student_row_id_text_view)
-            val checkBox: CheckBox? = view?.findViewById(R.id.student_row_check_box)
-
-            nameTextView?.text = student?.name
-            idTextView?.text = student?.id
-//            checkBox?.isChecked = student?.isChecked ?: false
-
-            checkBox?.apply {
-                isChecked = student?.isChecked ?: false
-                tag = position
-            }
-//            checkBox.setOnClickListener {
-//                student?.isChecked = checkBox.isChecked
-//            }
-            return view!!
+            return view
         }
     }
 }

@@ -7,8 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.studentsapp.model.Model
 
 class MainActivity : AppCompatActivity() {
+    private val model = Model.shared
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -19,14 +22,9 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // TODO: Step 1 - Add Student Button ✅
-        // TODO: Step 2 - Navigate to AddStudentActivity
-        // TODO: Step 3 - Create AddStudentLayout
-        // TODO: Step 4 - Save Student
-
         val addStudentButton: Button = findViewById(R.id.main_acitivity_add_student_button)
         addStudentButton.setOnClickListener {
-            val intent = Intent(this, AddStudentActivity::class.java)
+            val intent = Intent(this, StudentsRecyclerViewActivity::class.java)
             startActivity(intent)
         }
     }

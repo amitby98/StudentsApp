@@ -2,7 +2,6 @@ package com.example.studentsapp.model
 
 import kotlin.text.set
 
-
 class Model private constructor() {
 
     val students: MutableList<Student> = ArrayList()

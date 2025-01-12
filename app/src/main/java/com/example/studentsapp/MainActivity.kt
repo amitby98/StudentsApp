@@ -10,6 +10,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.studentsapp.model.Model
 
 class MainActivity : AppCompatActivity() {
+    private val model = Model.shared
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

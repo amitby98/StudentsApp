@@ -1,6 +1,9 @@
 package com.example.studentsapp.model
 
+import kotlin.text.set
+
 class Model private constructor() {
+
     val students: MutableList<Student> = ArrayList()
 
     companion object {
@@ -18,16 +21,18 @@ class Model private constructor() {
             students.add(student)
         }
     }
-
     fun addStudent(student: Student) {
         students.add(student)
     }
 
+
     fun getAllStudents(): List<Student> = students
+
 
     fun getStudentById(id: String): Student? {
         return students.find { it.id == id }
     }
+
 
     fun updateStudent(updatedStudent: Student) {
         val index = students.indexOfFirst { it.id == updatedStudent.id }
@@ -36,12 +41,15 @@ class Model private constructor() {
         }
     }
 
+
     fun deleteStudent(id: String) {
         students.removeAll { it.id == id }
     }
 
+
     fun updateStudentCheckStatus(id: String, isChecked: Boolean) {
-        getStudentById(id)?.let {
+        val student = getStudentById(id)
+        student?.let {
             it.isChecked = isChecked
             updateStudent(it)
         }

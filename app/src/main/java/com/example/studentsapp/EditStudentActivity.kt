@@ -57,7 +57,7 @@ class EditStudentActivity : AppCompatActivity() {
                     val updatedStudent = Student(
                         name = newName,
                         id = newId,
-                        avatarUrl = "",
+                        avatarUrl = student.avatarUrl,
                         isChecked = student.isChecked
                     )
                     model.updateStudent(updatedStudent)

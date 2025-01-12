@@ -8,18 +8,44 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.studentsapp.model.Model
 import com.example.studentsapp.model.Student
 
-class StudentAdapter : RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() {
-    private var students: List<Student> = ArrayList()
-    var onItemClick: ((Student) -> Unit)? = null
-    var onCheckChanged: ((Student, Boolean) -> Unit)? = null
+class StudentAdapter(private val students: List<Student>?) : RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() {
+    var listener: OnItemClickListener? = null
 
-    class StudentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val nameTextView: TextView = itemView.findViewById(R.id.student_row_name_text_view)
-        val idTextView: TextView = itemView.findViewById(R.id.student_row_id_text_view)
-        val checkbox: CheckBox = itemView.findViewById(R.id.student_row_check_box)
-        val studentImage: ImageView = itemView.findViewById(R.id.student_row_image_view)
+    inner class StudentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val nameTextView: TextView = itemView.findViewById(R.id.student_row_name_text_view)
+        private val idTextView: TextView = itemView.findViewById(R.id.student_row_id_text_view)
+        private val checkBox: CheckBox = itemView.findViewById(R.id.student_row_check_box)
+        private val imageView: ImageView = itemView.findViewById(R.id.student_row_image_view)
+        private var student: Student? = null
+
+        init {
+            itemView.setOnClickListener {
+                student?.let {
+                    listener?.onItemClick(it)
+                }
+            }
+
+            checkBox.setOnClickListener { view ->
+                (view.tag as? Int)?.let { tag ->
+                    student?.isChecked = (view as? CheckBox)?.isChecked ?: false
+                    student?.let { Model.shared.updateStudentCheckStatus(it.id, it.isChecked) }
+                }
+            }
+        }
+
+        fun bind(student: Student?, position: Int) {
+            this.student = student
+            nameTextView.text = student?.name
+            idTextView.text = student?.id
+            imageView.setImageResource(R.drawable.student)
+            checkBox.apply {
+                isChecked = student?.isChecked ?: false
+                tag = position
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StudentViewHolder {
@@ -29,26 +55,12 @@ class StudentAdapter : RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() 
     }
 
     override fun onBindViewHolder(holder: StudentViewHolder, position: Int) {
-        val student = students[position]
-
-        holder.nameTextView.text = student.name
-        holder.idTextView.text = student.id
-        holder.checkbox.isChecked = student.isChecked
-        holder.studentImage.setImageResource(R.drawable.student)
-
-        holder.itemView.setOnClickListener {
-            onItemClick?.invoke(student)
-        }
-
-        holder.checkbox.setOnCheckedChangeListener { _, isChecked ->
-            onCheckChanged?.invoke(student, isChecked)
-        }
+        holder.bind(students?.get(position), position)
     }
 
-    override fun getItemCount() = students.size
+    override fun getItemCount(): Int = students?.size ?: 0
+}
 
-    fun updateStudents(newStudents: List<Student>) {
-        students = newStudents
-        notifyDataSetChanged()
-    }
+interface OnItemClickListener {
+    fun onItemClick(student: Student)
 }
